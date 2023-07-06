@@ -16,19 +16,75 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val tasks = listOf<Task>(
-            Task("Freesia","遊び"),
-            Task("Lily","勉強"),
-            Task("SunFlower","テスト"),
-        )
+        // Firestoreをインスタンス化
+        val db = Firebase.firestore
 
-        val adapter = TaskAdapter()
-        adapter.updateTasks(tasks)
+        // RecyclerViewの設定
+        val taskAdapter = TaskAdapter()
+        binding.recyclerView.adapter = taskAdapter
+        binding.recyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        binding.recyclerView.adapter = adapter
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        // アプリ起動時に、保存されているデータを取得する
+        db.collection("tasks")
+            .get()
+            .addOnSuccessListener { tasks ->
+                val taskList = ArrayList<Task>()
+                tasks.forEach { taskList.add(it.toObject(Task::class.java)) }
+//                taskAdapter.submitList(taskList)
+                taskAdapter.submitList(taskList)
+                println("addedおおおおおおお")
+            }
+            .addOnFailureListener { exception ->
+                Log.d("tag", "Error getting documents: ", exception)
+            }
 
+        // データの変更をリアルタイムでアプリに反映する
+        val docRef = db.collection("tasks")
+        docRef.addSnapshotListener { tasks, e ->
+            if (e != null) {
+                Log.w("tag", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (tasks != null) {
+                val taskList = ArrayList<Task>()
+                tasks.forEach { taskList.add(it.toObject(Task::class.java)) }
+                taskAdapter.submitList(taskList)
+            } else {
+                Log.d("tag", "Current data: null")
+            }
+        }
+
+        binding.addButton.setOnClickListener {
+
+            // Taskをインスタンス化
+            val task = Task(
+                title = binding.titleEditText.text.toString(),
+            )
+
+            db.collection("tasks")
+                .add(task)
+                .addOnSuccessListener { documentReference ->
+                    Log.d("tag", "DocumentSnapshot added with ID: ${documentReference.id}")
+                }
+                .addOnFailureListener { e ->
+                    Log.w("tag", "Error adding document", e)
+                }
+
+        }
+
+
+
+
+
+
+//        val tasks = listOf<Task>(
+//            Task("Freesia","遊び"),
+//            Task("Lily","勉強"),
+//            Task("SunFlower","テスト"),
+//        )
 
 
     }

@@ -26,6 +26,13 @@
             android:text="やること"
             android:textSize="18sp" />
 
+        <TextView
+            android:id="@+id/date_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|end"
+            android:text="2022/01/01" />
+
 
 
     </LinearLayout>
